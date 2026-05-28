@@ -4,17 +4,17 @@ extends CharacterBody2D
 # SUBREGION Exported Variables, default values set here, can be updated in editor
 @export_group("Character Controller Movement Values")
 @export_subgroup("Grounded Values")
-@export var RUN_SPEED				: float = 150.0
-@export var RUN_ACC					: float = 900.0 # x6 Run Speed, hit max speed in 1/6 sec
+@export var RUN_SPEED				: float = 200.0
+@export var RUN_ACC					: float = 500.0
 @export var RUN_STICK_THRESHOLD		: float = 0.2
-@export var IDLE_SPEED_THRESHOLD		: float = 5.0
-@export var GROUND_FRICTION			: float = 750.0 # x5 Run Speed, hit 0 in 0.2 sec
+@export var IDLE_SPEED_THRESHOLD	: float = 5.0
+@export var GROUND_FRICTION			: float = 800.0
 @export_subgroup("Aerial Values")
 @export var JUMP_VELOCITY			: float = -150.0
 @export var JUMP_ACC					: float = -750.0
 @export var MAX_JUMP_TIME			: float = 0.2 # in seconds
-@export var DRIFT_SPEED				: float = 140.0
-@export var DRIFT_ACC				: float = 280.0
+@export var DRIFT_SPEED				: float = 240.0
+@export var DRIFT_ACC					: float = 160.0
 @export_range(0.0, 0.5, 0.05, "suffix:Seconds") var COYOTE_TIME : float = 0.1
 @export_subgroup("Misc Debug Settings")
 @export_range(1.0, 3.0, 0.1) var JUMP_SQUAT_GRAVITY_DAMP : float = 1.5
