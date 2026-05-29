@@ -2,28 +2,23 @@
 
 [ext_resource type="Texture2D" uid="uid://dgrsxuvjm223f" path="res://Assets/Sprites/CaveTerrain.png" id="1_lkiv5"]
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_lkiv5"]
-radius = 6.0
-height = 32.0
-
 [node name="FloatingPlat" type="StaticBody2D" unique_id=1651114786]
 
 [node name="Sprites" type="Node2D" parent="." unique_id=446528668]
 scale = Vector2(2, 2)
 
-[node name="R" type="Sprite2D" parent="Sprites" unique_id=383805715]
+[node name="0" type="Sprite2D" parent="Sprites" unique_id=451006234]
+texture = ExtResource("1_lkiv5")
+offset = Vector2(-4, 0)
+region_enabled = true
+region_rect = Rect2(16, 40, 8, 6)
+
+[node name="1" type="Sprite2D" parent="Sprites" unique_id=383805715]
 texture = ExtResource("1_lkiv5")
 offset = Vector2(4, 0)
 flip_h = true
 region_enabled = true
 region_rect = Rect2(16, 40, 8, 6)
 
-[node name="L" type="Sprite2D" parent="Sprites" unique_id=451006234]
-texture = ExtResource("1_lkiv5")
-offset = Vector2(-4, 0)
-region_enabled = true
-region_rect = Rect2(16, 40, 8, 6)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1147354225]
-rotation = 1.5707964
-shape = SubResource("CapsuleShape2D_lkiv5")
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1365462439]
+polygon = PackedVector2Array(16, -6, 6, 0, -6, 0, -16, -6)

@@ -2,6 +2,11 @@
 
 [ext_resource type="Script" uid="uid://dfg6c2mm3h5mj" path="res://Scripts/character_controller.gd" id="1_cvnsp"]
 [ext_resource type="Texture2D" uid="uid://bjp6u753qsff0" path="res://Assets/Adventurer_sprite_rvros/50x37Sprites_Sheet_v1.5.png" id="2_6t5aa"]
+[ext_resource type="Texture2D" uid="uid://c1d6v8hmp0ac5" path="res://Assets/Adventurer_sprite_rvros/Individual Sprites/adventurer-smrslt-00.png" id="2_vgqql"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_36dho"]
+atlas = ExtResource("2_vgqql")
+region = Rect2(0, 0, 50, 37)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_2ijsl"]
 atlas = ExtResource("2_6t5aa")
@@ -119,8 +124,24 @@ region = Rect2(250, 37, 50, 37)
 atlas = ExtResource("2_6t5aa")
 region = Rect2(300, 37, 50, 37)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_xuaoq"]
+atlas = ExtResource("2_6t5aa")
+region = Rect2(100, 407, 50, 37)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wohnl"]
+atlas = ExtResource("2_6t5aa")
+region = Rect2(150, 407, 50, 37)
+
 [sub_resource type="SpriteFrames" id="SpriteFrames_8erm5"]
 animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_36dho")
+}],
+"loop": false,
+"name": &"_god_mode",
+"speed": 5.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_2ijsl")
@@ -216,7 +237,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"landing",
-"speed": 60.0
+"speed": 30.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -240,6 +261,17 @@ animations = [{
 "loop": true,
 "name": &"run",
 "speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xuaoq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wohnl")
+}],
+"loop": true,
+"name": &"wall_hold",
+"speed": 5.0
 }]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_cvnsp"]
@@ -248,7 +280,6 @@ height = 29.0
 
 [node name="Player" type="CharacterBody2D" unique_id=1683418299]
 script = ExtResource("1_cvnsp")
-JUMP_ACC = -1650.0
 
 [node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=1018757523]
 position = Vector2(0, -17.5)
