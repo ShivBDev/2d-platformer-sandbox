@@ -1,23 +1,26 @@
 extends CharacterBody2D
 
-#DEBUG_TOOL
-const godMode = "_god_mode"
-@onready var collider: CollisionShape2D = $CollisionShape2D
-func _handle_god_mode() -> void:
+#DEBUG_TOOL god mode impl
+const __godMode = "_god_mode"
+const __godModeSpeed = 500.0
+@onready var __playerCollider: CollisionShape2D = $PlayerCollider
+func __handle_god_mode() -> void:
 	if not Input.is_action_just_pressed("GodModeToggle"): return
-	if sprite.animation == godMode:
+	if sprite.animation == __godMode:
 		print("Exiting God Mode")
-		collider.disabled = false
+		__playerCollider.disabled = false
+		hurtbox.disabled = false
 		return _switch_state("idle")
 	print("Entering God Mode")
-	collider.disabled = true
-	return _switch_state(godMode)
+	__playerCollider.disabled = true
+	hurtbox.disabled = true
+	return _switch_state(__godMode)
 func __god_mode_state() -> void:
 	_set_facing_dir()
 	var verticalInput : float = Input.get_axis("Down", "Up")
 	var inputVec : Vector2 = Vector2(_stickDir, -verticalInput).normalized()
-	velocity = inputVec * RUN_SPEED * 2
-#DEBUG_TOOL end
+	velocity = inputVec * __godModeSpeed
+#DEBUG_TOOL end god mode impl
 
 #region consts
 # SUBREGION Exported Variables, default values set here, can be updated in editor
@@ -35,6 +38,9 @@ func __god_mode_state() -> void:
 @export var DRIFT_SPEED				: float = 200.0
 @export var DRIFT_ACC				: float = 150.0
 @export_range(0.0, 0.5, 0.05, "suffix:Seconds") var COYOTE_TIME : float = 0.1
+@export_subgroup("Interaction Values")
+@export var KNOCKBACK_STRENGTH		: float = 300
+@export var BOUNCE_STRENGTH			: float = -300
 @export_subgroup("Misc Physics Settings")
 @export var MAX_FALL_SPEED						: float = 1000.0
 @export var MAX_WALL_HOLD_FALL_SPEED 			: float = 100.0
@@ -47,6 +53,7 @@ func __god_mode_state() -> void:
 @export_range(0.0, 1.0, 0.05) var JUMP_SQUAT_GRAVITY_SCALE			: float = 0.5
 @export_range(0.0, 1.0, 0.05) var JUMP_SQUAT_GROUND_FRICTION_SCALE	: float = 0.5
 @export_range(1.0, 5.0, 0.1) var LANDING_GROUND_FRICTION_SCALE		: float = 1.5
+@export_range(0.0, 0.5, 0.05, "suffix:Seconds") var KNOCKDOWN_LOCKOUT : float = 0.2
 #endregion consts
 
 #region state_management
@@ -55,29 +62,42 @@ var _stickDir 		: float = 0.0
 var _engineDelta 	: float = 0.0
 # SUBREGION Player Info
 var _facingRight 	: bool = true
+var _jump_held 		: bool = true
+var _disable_turn 	: bool = false
+var _wall_to_right 	: bool = true
+var _prev_frame_vel : Vector2 = Vector2.ZERO
+# SUBREGION timers
 var _coyoteTimer 	: float = 0.0
 var _jumpTimer 		: float = 0.0
-var _jump_held 		: bool = true
-var _disable_turn_till_fall : bool = false
-var _wall_to_right 	: bool = true
 var _wall_hold_lockout_timer : float = 0.0
-var _prev_frame_vel : Vector2 = Vector2.ZERO
+var _knock_down_lockout_timer : float = 0.0
 # SUBREGION Anim Info
+var _jump_last_frame_index : int = 0
 var _jump_squat_last_frame_index : int = 0
 var _landing_anim_last_frame_index : int = 0
+var _down_air_anim_last_frame_index : int = 0
 @onready var sprite	: AnimatedSprite2D = $Sprite
+@onready var hitbox: CollisionShape2D = $EnvColliders/Hitbox/HitboxShape
+@onready var hurtbox: CollisionShape2D = $EnvColliders/Hurtbox/HurtboxShape
+@onready var upward_raycast: RayCast2D = $EnvColliders/UpwardRaycast
 #endregion state_management
 
 #region control_flow
 func _ready() -> void:
-	_jump_squat_last_frame_index = sprite.sprite_frames.get_frame_count("jump_squat") - 1
-	_landing_anim_last_frame_index = sprite.sprite_frames.get_frame_count("landing") - 1
+	_jump_last_frame_index = \
+		sprite.sprite_frames.get_frame_count("jump") - 1
+	_jump_squat_last_frame_index = \
+		sprite.sprite_frames.get_frame_count("jump_squat") - 1
+	_landing_anim_last_frame_index = \
+		sprite.sprite_frames.get_frame_count("landing") - 1
+	_down_air_anim_last_frame_index = \
+		sprite.sprite_frames.get_frame_count("down_air") - 1
 
 func _physics_process(delta: float) -> void:
 	_stickDir = Input.get_axis("Left", "Right")
 	_engineDelta = delta
 
-	_handle_god_mode() #DEBUG_TOOL
+	__handle_god_mode() #DEBUG_TOOL enable god mode check
 
 	var stateFn = Callable(self, "_%s_state" % [sprite.animation])
 	if stateFn.is_valid(): stateFn.call()
@@ -91,9 +111,11 @@ func _switch_state(state: String) -> void:
 	match state:
 		"run": _apply_run_speed()
 		"idle": _apply_ground_friction()
-		"fall": _coyoteTimer = 0.0
+		"fall":
+			_coyoteTimer = 0.0
+			if _disable_turn : _disable_turn = false
 		"jump_squat":
-			_apply_ground_friction(JUMP_SQUAT_GROUND_FRICTION_SCALE) #apply reduced friction for jump squat
+			_apply_ground_friction(JUMP_SQUAT_GROUND_FRICTION_SCALE)
 			_jump_held = true
 		"jump":
 			velocity.y = JUMP_VELOCITY
@@ -102,26 +124,35 @@ func _switch_state(state: String) -> void:
 		"landing":
 			_apply_ground_friction(LANDING_GROUND_FRICTION_SCALE)
 		"wall_hold":
-			if velocity.y < 0 : velocity.y = max(velocity.y, MAX_WALL_HOLD_INIT_UPWARD_SPEED)
-			elif velocity.y > 0 : velocity.y = min(velocity.y, MAX_WALL_HOLD_FALL_SPEED)
+			if velocity.y < 0 : velocity.y = maxf(velocity.y, MAX_WALL_HOLD_INIT_UPWARD_SPEED)
+			elif velocity.y > 0 : velocity.y = minf(velocity.y, MAX_WALL_HOLD_FALL_SPEED)
+		"down_air":
+			if _disable_turn : _disable_turn = false
+			hitbox.disabled = false
+			hurtbox.disabled = true
 		_: pass # Some states don't require anything extra
 	sprite.play(state)
 #endregion control_flow
 
 #region helpers
+func _handle_attack_press() -> bool:
+	if not Input.is_action_just_pressed("Attack"): return false
+	_switch_state("down_air")
+	return true
+
 func _handle_jump_press() -> bool:
 	if not Input.is_action_just_pressed("Jump"): return false
 	_wall_hold_lockout_timer = 0.0
-	if is_on_floor() and velocity.y == 0:
+	if is_on_floor() and velocity.y >= 0:
 		_switch_state("jump_squat")
 		return true
 	_jump_held = true # allow variable jump height for coyote/wall jumps
 	if is_on_wall():
-		var dir = -1.0 if _wall_to_right else 1.0
+		var dir : float = -1.0 if _wall_to_right else 1.0
 		velocity.x = absf(JUMP_VELOCITY) * WALL_JUMP_LATERAL_SPEED_SCALE * dir
-		_disable_turn_till_fall = false
+		_disable_turn = false
 		_set_facing_dir(false)
-		_disable_turn_till_fall = true
+		_disable_turn = true
 	_switch_state("jump")
 	return true
 
@@ -130,21 +161,24 @@ func _handle_wall_hold_check() -> bool:
 		_wall_hold_lockout_timer += _engineDelta
 		return false
 	if is_on_wall():
-		print("ON WALL: ", velocity, _prev_frame_vel)
 		_wall_to_right = true if get_wall_normal().x < 0 else false
 		if _wall_to_right:
-			if Input.is_action_pressed("Right") or _prev_frame_vel.x > WALL_HOLD_LATERAL_SPEED_THRESHOLD:
+			if Input.is_action_pressed("Right") or \
+			_prev_frame_vel.x > WALL_HOLD_LATERAL_SPEED_THRESHOLD:
 				_switch_state("wall_hold")
 				return true
 		else:
-			if Input.is_action_pressed("Left") or _prev_frame_vel.x < -WALL_HOLD_LATERAL_SPEED_THRESHOLD:
+			if Input.is_action_pressed("Left") or \
+			_prev_frame_vel.x < -WALL_HOLD_LATERAL_SPEED_THRESHOLD:
 				_switch_state("wall_hold")
 				return true
 	return false
 
 
 ## Gravity
-func _apply_gravity(gravityScale : float = 1.0, maxFallSpeed : float = MAX_FALL_SPEED) -> void:
+func _apply_gravity(
+gravityScale : float = 1.0,
+maxFallSpeed : float = MAX_FALL_SPEED) -> void:
 	var gravity : Vector2 = get_gravity() * gravityScale * _engineDelta
 	velocity += gravity
 	velocity.y = minf(maxFallSpeed, velocity.y)
@@ -163,7 +197,7 @@ func _handle_jump_hold_check():
 	_jump_held = Input.is_action_pressed("Jump") if _jump_held else false
 ## Track facing direction for sprites
 func _set_facing_dir(stickBased:bool = true) -> void:
-	if _disable_turn_till_fall: return
+	if _disable_turn: return
 	if stickBased:
 		_facingRight = _facingRight if _stickDir == 0 else _stickDir > 0
 	else:
@@ -177,7 +211,7 @@ func _idle_state() -> void:
 	# by checking jump before floor check, we add 1 hidden frame of coyote time
 	if _handle_jump_press() : return
 	if not is_on_floor(): return _switch_state("fall")
-	if abs(_stickDir) > RUN_STICK_THRESHOLD: return _switch_state("run")
+	if absf(_stickDir) > RUN_STICK_THRESHOLD: return _switch_state("run")
 	_set_facing_dir()
 	_apply_ground_friction()
 
@@ -198,21 +232,22 @@ func _jump_squat_state() -> void:
 	_handle_jump_hold_check()
 
 func _jump_state() -> void:
-	if is_on_floor(): return _switch_state("landing")
+	if is_on_floor() and velocity.y >= 0: return _switch_state("landing")
 	if _handle_wall_hold_check(): return
 	if velocity.y > 0: return _switch_state("fall")
 	_handle_jump_hold_check()
 	if _jump_held and _jumpTimer <= MAX_JUMP_TIME:
 		_jumpTimer += _engineDelta
 		velocity.y += JUMP_ACC * _engineDelta
+	if _handle_attack_press(): return
 	_set_facing_dir()
 	_apply_drift_speed()
 	_apply_gravity()
 
 func _fall_state() -> void:
-	if is_on_floor(): return _switch_state("landing")
+	if is_on_floor() and velocity.y >= 0: return _switch_state("landing")
 	if _handle_wall_hold_check(): return
-	if _disable_turn_till_fall : _disable_turn_till_fall = false
+	if _handle_attack_press(): return
 	_set_facing_dir()
 	_apply_drift_speed()
 	#coyote time!
@@ -230,10 +265,51 @@ func _wall_hold_state() -> void:
 	_apply_drift_speed()
 	_apply_gravity(WALL_HOLD_GRAVITY_SCALE, MAX_WALL_HOLD_FALL_SPEED)
 	#apply subtle drift into wall
-	velocity.x += WALL_HOLD_DRIFT_SPEED * _engineDelta * (1.0 if _wall_to_right else -1.0)
+	var dir : float = 1.0 if _wall_to_right else -1.0
+	velocity.x += WALL_HOLD_DRIFT_SPEED * _engineDelta * dir
 
 func _landing_state() -> void:
 	if sprite.frame == _landing_anim_last_frame_index and not sprite.is_playing():
 		return _switch_state("idle")
 	_apply_ground_friction(LANDING_GROUND_FRICTION_SCALE)
+
+func _down_air_state() -> void:
+	if is_on_floor() and velocity.y >= 0:
+		hitbox.disabled = true
+		hurtbox.disabled = false
+		return _switch_state("landing")
+	var frame : int = sprite.frame
+	if frame == _down_air_anim_last_frame_index and not sprite.is_playing():
+		hitbox.disabled = true
+		hurtbox.disabled = false
+		_switch_state("fall" if velocity.y >=0 else "jump")
+		sprite.frame = 0 if velocity.y >=0 else _jump_last_frame_index
+	_apply_drift_speed()
+	_apply_gravity()
+
+func _knocked_down_state() -> void:
+	if _knock_down_lockout_timer < KNOCKDOWN_LOCKOUT:
+		_knock_down_lockout_timer += _engineDelta
+	elif is_on_floor(): return _switch_state("landing")
+	_apply_gravity()
+	pass
 #endregion
+
+# Signals
+func _on_hurtbox_body_entered(_body: Node2D) -> void:
+	var xdir : float
+	if velocity.x != 0: xdir = -1.0 if velocity.x > 0 else 1.0
+	else : xdir = -1.0 if _facingRight else 1.0
+	var ydir : float = -1.0
+	if upward_raycast.is_colliding() : ydir = 1.0
+	var knockbackDir : Vector2 = Vector2(xdir, ydir).normalized()
+	velocity = knockbackDir * KNOCKBACK_STRENGTH
+	_knock_down_lockout_timer = 0.0
+	_switch_state("knocked_down")
+	pass # Replace with function body.
+
+func _on_hitbox_body_entered(_body: Node2D) -> void:
+	_jump_held = false
+	velocity.y = BOUNCE_STRENGTH
+	print("You hit Spike!")
+	pass # Replace with function body.
