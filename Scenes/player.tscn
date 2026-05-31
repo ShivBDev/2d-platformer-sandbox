@@ -359,7 +359,7 @@ radius = 8.0
 height = 28.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_vgqql"]
-size = Vector2(30, 19)
+size = Vector2(30, 24)
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_vgqql"]
 radius = 9.0
@@ -386,7 +386,7 @@ collision_layer = 2
 collision_mask = 2
 
 [node name="HitboxShape" type="CollisionShape2D" parent="EnvColliders/Hitbox" unique_id=1732006925]
-position = Vector2(-5, -6)
+position = Vector2(-5, -3)
 shape = SubResource("RectangleShape2D_vgqql")
 disabled = true
 

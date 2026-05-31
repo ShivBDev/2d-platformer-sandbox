@@ -35,12 +35,12 @@ func __god_mode_state() -> void:
 @export var JUMP_VELOCITY			: float = -150.0
 @export var JUMP_ACC					: float = -1500.0
 @export var MAX_JUMP_TIME			: float = 0.2 # in seconds
-@export var DRIFT_SPEED				: float = 200.0
-@export var DRIFT_ACC				: float = 150.0
+@export var DRIFT_SPEED				: float = 190.0
+@export var DRIFT_ACC				: float = 160.0
 @export_range(0.0, 0.5, 0.05, "suffix:Seconds") var COYOTE_TIME : float = 0.1
 @export_subgroup("Interaction Values")
 @export var KNOCKBACK_STRENGTH		: float = 300
-@export var BOUNCE_STRENGTH			: float = -300
+@export var BOUNCE_STRENGTH			: float = -350
 @export_subgroup("Misc Physics Settings")
 @export var MAX_FALL_SPEED						: float = 1000.0
 @export var MAX_WALL_HOLD_FALL_SPEED 			: float = 100.0
@@ -161,7 +161,9 @@ func _handle_wall_hold_check() -> bool:
 		_wall_hold_lockout_timer += _engineDelta
 		return false
 	if is_on_wall():
-		_wall_to_right = true if get_wall_normal().x < 0 else false
+		var wallN : Vector2 = get_wall_normal()
+		if absf(wallN.x) < 0.8 : return false
+		_wall_to_right = true if wallN.x < 0 else false
 		if _wall_to_right:
 			if Input.is_action_pressed("Right") or \
 			_prev_frame_vel.x > WALL_HOLD_LATERAL_SPEED_THRESHOLD:
