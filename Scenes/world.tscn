@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://cn6gs7ljy7631"]
+
+[ext_resource type="Script" uid="uid://7vshwpou68mv" path="res://Scripts/level_manager.gd" id="1_5a7ea"]
+[ext_resource type="PackedScene" uid="uid://q1gla4fcfh14" path="res://Scenes/player.tscn" id="2_8j60k"]
+[ext_resource type="Script" uid="uid://cajbbs533b6p5" path="res://Scripts/main_camera.gd" id="3_fo5ed"]
+
+[node name="World" type="Node2D" unique_id=737346395]
+
+[node name="GameMap" type="Node" parent="." unique_id=1634811482]
+script = ExtResource("1_5a7ea")
+
+[node name="Player" parent="." unique_id=1683418299 instance=ExtResource("2_8j60k")]
+unique_name_in_owner = true
+z_index = 1
+position = Vector2(56, -120)
+
+[node name="MainCamera" type="Camera2D" parent="." unique_id=130535745]
+offset = Vector2(640, -360)
+script = ExtResource("3_fo5ed")

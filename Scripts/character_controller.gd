@@ -1,4 +1,5 @@
 extends CharacterBody2D
+class_name Player
 
 #DEBUG_TOOL god mode impl
 const __godMode = "_god_mode"

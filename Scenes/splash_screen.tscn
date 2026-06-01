@@ -1,0 +1,75 @@
+[gd_scene format=3 uid="uid://ba51ffa1rnxtm"]
+
+[ext_resource type="Texture2D" uid="uid://h41sji4a80bo" path="res://Assets/braindeadDoe.png" id="1_6b1b0"]
+
+[sub_resource type="Animation" id="Animation_wrm1d"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [-0.17453292]
+}
+
+[sub_resource type="Animation" id="Animation_3dryh"]
+resource_name = "splash"
+length = 2.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.99),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [-0.17453292, 0.17453292]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_wowpa"]
+_data = {
+&"RESET": SubResource("Animation_wrm1d"),
+&"splash": SubResource("Animation_3dryh")
+}
+
+[sub_resource type="LabelSettings" id="LabelSettings_qxrlw"]
+font_size = 48
+
+[node name="SplashScreen" type="Node" unique_id=1958617019]
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=2032645495]
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0, 0, 0, 1)
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=757861972]
+offset_left = 512.0
+offset_top = 150.0
+offset_right = 768.0
+offset_bottom = 406.0
+rotation = -0.17453292
+pivot_offset = Vector2(128, 128)
+texture = ExtResource("1_6b1b0")
+stretch_mode = 4
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="TextureRect" unique_id=475344496]
+libraries/ = SubResource("AnimationLibrary_wowpa")
+autoplay = &"splash"
+
+[node name="Label" type="Label" parent="." unique_id=1741083408]
+offset_left = 460.0
+offset_top = 500.0
+offset_right = 860.0
+offset_bottom = 550.0
+text = "BRAINDEAD DOE"
+label_settings = SubResource("LabelSettings_qxrlw")
+horizontal_alignment = 1
+vertical_alignment = 1

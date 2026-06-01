@@ -7,24 +7,25 @@
 [node name="Sprites" type="Node2D" parent="." unique_id=446528668]
 scale = Vector2(2, 2)
 
-[node name="0" type="Sprite2D" parent="Sprites" unique_id=451006234]
+[node name="0" type="Sprite2D" parent="Sprites" unique_id=1237108564]
 texture = ExtResource("1_183hh")
 offset = Vector2(-7, 0)
 region_enabled = true
-region_rect = Rect2(16, 40, 8, 6)
+region_rect = Rect2(8, 40, 8, 6)
 
 [node name="1" type="Sprite2D" parent="Sprites" unique_id=383805715]
 texture = ExtResource("1_183hh")
 flip_h = true
 region_enabled = true
-region_rect = Rect2(16, 40, 8, 6)
+region_rect = Rect2(8, 40, 8, 6)
 
 [node name="2" type="Sprite2D" parent="Sprites" unique_id=1114921445]
 texture = ExtResource("1_183hh")
 offset = Vector2(7, 0)
 flip_h = true
 region_enabled = true
-region_rect = Rect2(16, 40, 8, 6)
+region_rect = Rect2(8, 40, 8, 6)
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=100597037]
+visible = false
 polygon = PackedVector2Array(22, -6, 12, 0, -12, 0, -22, -6)

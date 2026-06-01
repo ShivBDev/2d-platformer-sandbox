@@ -1,24 +1,15 @@
 [gd_scene format=3 uid="uid://b5gh5l1kuuvjw"]
 
-[ext_resource type="PackedScene" uid="uid://b6ov1tltaebkb" path="res://Scenes/Levels/Cave/1.tscn" id="1_qxrlw"]
-[ext_resource type="PackedScene" uid="uid://ivu61fyw4ygq" path="res://Scenes/Levels/Cave/2.tscn" id="2_3dryh"]
-[ext_resource type="PackedScene" uid="uid://q1gla4fcfh14" path="res://Scenes/player.tscn" id="2_wrm1d"]
-[ext_resource type="Script" uid="uid://cajbbs533b6p5" path="res://Scripts/main_camera.gd" id="4_3dryh"]
+[ext_resource type="Script" uid="uid://esqtlhyh5xud" path="res://Scripts/game.gd" id="1_qxrlw"]
+[ext_resource type="PackedScene" uid="uid://ba51ffa1rnxtm" path="res://Scenes/splash_screen.tscn" id="2_qxrlw"]
 
-[node name="Game" type="Node2D" unique_id=2134980708]
+[node name="Game" type="Node" unique_id=645765632]
+script = ExtResource("1_qxrlw")
 
-[node name="GameMap" type="Node" parent="." unique_id=1440798993]
+[node name="GUI" type="Control" parent="." unique_id=1977727249]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
 
-[node name="1-1" parent="GameMap" unique_id=236027323 instance=ExtResource("1_qxrlw")]
-
-[node name="1-2" parent="GameMap" unique_id=1035467957 instance=ExtResource("2_3dryh")]
-position = Vector2(0, -720)
-
-[node name="Player" parent="." unique_id=1683418299 instance=ExtResource("2_wrm1d")]
-unique_name_in_owner = true
-z_index = 1
-position = Vector2(56, -120)
-
-[node name="MainCamera" type="Camera2D" parent="." unique_id=548554111]
-offset = Vector2(640, -360)
-script = ExtResource("4_3dryh")
+[node name="SplashScreen" parent="GUI" unique_id=1958617019 instance=ExtResource("2_qxrlw")]
